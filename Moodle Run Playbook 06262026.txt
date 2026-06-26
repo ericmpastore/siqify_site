@@ -1,0 +1,52 @@
+Moodle Run Playbook 06/26/2026
+
+Step 1: Set Up Compute Engine Instance
+
+gcloud config set project siqify-analytics
+gcloud config set compute/zone us-east4-c
+
+gcloud compute instances create moodle-app \
+  --machine-type=e2-standard-2 \
+  --image-family=ubuntu-2404-lts-amd64 \
+  --image-project=ubuntu-os-cloud \
+  --boot-disk-size=30GB --boot-disk-type=pd-balanced \
+  --tags=http-server,https-server
+
+Step 2 — Provision Cloud SQL (PostgreSQL 16, private IP)
+
+gcloud services enable servicenetworking.googleapis.com sqladmin.googleapis.com
+
+gcloud sql instances create moodle-db \
+  --database-version=POSTGRES_16 \
+  --tier=db-custom-2-7680 \
+  --region=us-east4 \
+  --storage-type=SSD --storage-size=20GB --storage-auto-increase \
+  --no-assign-ip --network=default \
+  --backup --backup-start-time=07:00
+
+gcloud sql databases create moodle --instance=moodle-db
+gcloud sql users create moodleuser --instance=moodle-db --password='STRONG_PW_HERE'
+
+-Result: did not work, needed to manually create Cloud SQL instance
+
+Step 3: Attach and mount the moodledata disk
+
+gcloud compute disks create moodledata-disk --size=100GB --type=pd-balanced
+gcloud compute instances attach-disk moodle-app --disk=moodledata-disk
+
+-Result: worked
+
+Mount Disk: 
+
+sudo mkfs.ext4 -F /dev/sdb
+sudo mkdir -p /opt/moodledata
+echo '/dev/sdb /opt/moodledata ext4 defaults 0 2' | sudo tee -a /etc/fstab
+sudo mount -a
+sudo chown www-data:www-data /opt/moodledata && sudo chmod 770 /opt/moodledata
+
+-Result: failed due to filesystem already mounted, most likely due to being created manually
+
+
+
+
+
