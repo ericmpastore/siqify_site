@@ -46,6 +46,19 @@ sudo chown www-data:www-data /opt/moodledata && sudo chmod 770 /opt/moodledata
 
 -Result: failed due to filesystem already mounted, most likely due to being created manually
 
+Step 4 — Install the stack
+
+sudo apt update && sudo apt install -y nginx postgresql-client \
+  php8.3-fpm php8.3-cli php8.3-pgsql php8.3-mysqli php8.3-curl php8.3-gd \
+  php8.3-intl php8.3-mbstring php8.3-soap php8.3-xml php8.3-zip \
+  php8.3-bcmath php8.3-sodium php8.3-opcache graphviz aspell
+
+Step 5 — Get the Moodle code
+
+cd /var/www
+sudo git clone -b MOODLE_502_STABLE git://git.moodle.org/moodle.git
+sudo chown -R www-data:www-data /var/www/moodle
+
 
 
 
